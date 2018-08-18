@@ -1,17 +1,17 @@
 =================
-OM Transliterator
+om_transliterator
 =================
 
-OM Transliterator is a Python library for transliterating text 
+om_transliterator is a Python library for transliterating text 
 from Kannada (Knda) unicode script to Latin (Latn) script 
 as per ISO 15919. 
 
 Installation
 ============
 
-To install OM Transliterator with pip, run: ``pip install om_transliterator``
+To install om_transliterator with pip, run: ``pip install om-transliterator``
 
-To install OM Transliterator from source, first clone the repository and then 
+To install om_transliterator from source, first clone the repository and then 
 run: ``python setup.py install``
 
 Basic Usage

@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""The setup.py file for OM Transliterator."""
+"""The setup.py file for om_transliterator."""
 
 from setuptools import setup
 
 setup(
-    name='OM Transliterator',
+    name='om_transliterator',
     version='0.1dev',
     author='Shriram Bhat',
     author_email='mail@shrirambhat.com',

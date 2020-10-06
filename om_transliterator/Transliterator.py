@@ -45,6 +45,7 @@ class Transliterator:
             string: Transliterated text.
         """
         index = 0
+        self.transliterated_text = ""
         for character in original_text:
             index += 1
             character_position = self._get_character_position(character)

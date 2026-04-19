@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Transliterator is a library for transliterating text from Kannada (Knda) unicode script to Latin (Latn) script as per ISO 15919."""
+"""Kannada (Knda) to Latin (Latn) transliteration per ISO 15919:2001."""
 
-from om_transliterator.charmap import charmap_iso15919
+from om_transliterator.charmap import charmap_iso15919, NUKTA_COMPOSITIONS
 
 KANNADA_BLOCK_START = 0x0C80
 KANNADA_BLOCK_SIZE = 128
@@ -39,33 +39,27 @@ POS_RETROFLEX_NASAL = 35
 POS_DENTAL_NASAL = 40
 POS_LABIAL_NASAL = 46
 
-POS_JA = 28
-POS_PHA = 43
-POS_ZA = 91
-POS_FA = 94
-
 
 class Transliterator:
 
     def knda_to_latn(self, original_text):
-        """Transliterate Kannada (Knda) unicode string to Latin (Latn) characters as per ISO 15919.
+        """Transliterate a Kannada unicode string to Latin per ISO 15919.
 
-        The steps performed by this method are:
+        Rules applied, in order:
 
-        1. Iterate through each character in the string.
-        2. If the current character is a vowel sign (matra),
-            delete the inherent a from the preceding consonant.
-        3. If the current character is an independent vowel syllable
-            (unattached to a preceding consonant), then add a colon
-            to resolve ambiguities (e.g. ba:i vs bai).
-        4. If the current character is a valid Kannada character, then
-            replace it with the equivalent Latin character.
-            A following nukta (U+0CBC) turns ja/pha into za/fa.
-        5. Anusvara is rendered as the homorganic nasal of the following
-            consonant, when there is one.
+        1. A vowel sign (matra) deletes the inherent 'a' of the preceding
+           consonant cluster.
+        2. An independent vowel i/u following a consonant+schwa is
+           separated by a colon to disambiguate "ba:i" from "bai".
+        3. Anusvara is rendered as the homorganic nasal of the following
+           stop when one exists, otherwise as the default "ṁ".
+        4. A base consonant followed by nukta (U+0CBC) composes to a
+           loan-sound form (ja+nukta -> za, pha+nukta -> fa, etc).
+        5. Any character outside the Kannada block passes through
+           unchanged.
 
         Args:
-            original_text (str): Original text in Kannada unicode.
+            original_text (str): Source text in Kannada unicode.
 
         Returns:
             str: Transliterated text.
@@ -94,11 +88,8 @@ class Transliterator:
                     out.append(self._anusvara_for(next_position, latn_map))
                     if next_position in STOPS:
                         self._delete_schwa(out)
-                elif position == POS_JA and next_position == POS_NUKTA:
-                    out.append(latn_map[POS_ZA])
-                    skip_next = True
-                elif position == POS_PHA and next_position == POS_NUKTA:
-                    out.append(latn_map[POS_FA])
+                elif next_position == POS_NUKTA and position in NUKTA_COMPOSITIONS:
+                    out.append(NUKTA_COMPOSITIONS[position])
                     skip_next = True
                 else:
                     out.append(latn_map[position])

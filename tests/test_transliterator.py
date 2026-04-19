@@ -87,7 +87,7 @@ class TestAmbiguityColon:
 class TestAnusvara:
     def test_anusvara_default(self, t):
         # No following consonant -> default anusvara
-        assert t.knda_to_latn("ಓಂ") == "ōṃ"
+        assert t.knda_to_latn("ಓಂ") == "ōṁ"
 
     def test_anusvara_before_velar(self, t):
         # ಅಂಕ -> aṅka
@@ -122,6 +122,27 @@ class TestNukta:
         assert t.knda_to_latn("ಜ಼ ಫ಼") == "za fa"
 
 
+class TestDravidianLetters:
+    def test_retroflex_approximant_letter_fa_position(self, t):
+        # U+0CDE ೞ historically "KANNADA LETTER FA" but actually a
+        # Dravidian retroflex approximant. ISO 15919: "ḻa" (l with
+        # macron below). Regression: the old charmap collided this
+        # slot with the synthetic nukta-fa target and returned "fa".
+        assert t.knda_to_latn("ೞ") == "ḻa"
+
+    def test_retroflex_lateral_la(self, t):
+        # ಳ -> "ḷa" (dot below, distinct from ḻa above)
+        assert t.knda_to_latn("ಳ") == "ḷa"
+
+    def test_dravidian_trill_r(self, t):
+        # ಱ -> "ṟa" (r with line below)
+        assert t.knda_to_latn("ಱ") == "ṟa"
+
+    def test_nakaara_pollu(self, t):
+        # U+0CDD ೝ syllable-final n
+        assert t.knda_to_latn("ೝ") == "n"
+
+
 class TestNonKannadaPassthrough:
     def test_ascii_letters_pass_through(self, t):
         assert t.knda_to_latn("hello") == "hello"
@@ -136,7 +157,7 @@ class TestNonKannadaPassthrough:
 class TestRobustness:
     def test_trailing_anusvara_no_crash(self, t):
         # Regression: lookahead past end used to raise IndexError
-        assert t.knda_to_latn("ಕಂ") == "kaṃ"
+        assert t.knda_to_latn("ಕಂ") == "kaṁ"
 
     def test_trailing_ja_no_crash(self, t):
         # Regression: ja at end used to raise IndexError
@@ -157,7 +178,7 @@ class TestKnownWords:
         ("ಭೀಮ", "bhīma"),
         ("ಮಹಾಭಾರತ", "mahābhārata"),
         ("ಆದಿ ಕವಿ", "ādi kavi"),
-        ("ಗದಾಯುದ್ಧಂ", "gadāyuddhaṃ"),
+        ("ಗದಾಯುದ್ಧಂ", "gadāyuddhaṁ"),
     ])
     def test_words(self, t, knda, latn):
         assert t.knda_to_latn(knda) == latn

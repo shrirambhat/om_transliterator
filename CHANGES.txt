@@ -1,9 +1,27 @@
-v0.2.0, 2026-04-19 -- Bounds-safe lookahead, remove Py2 decode, make
-    Transliterator stateless per call, replace magic numbers with named
-    constants, explicit nukta handling, pytest suite, pyproject.toml.
-    ISO 15919 charmap fixes: anusvara now ṃ (U+1E43, dot below) instead
-    of ṁ (dot above); vocalic r/rr/l/ll use combining ring below
-    (removing the ḷ collision with retroflex la ḷa); ġ slot now "ġa"
-    for consistency with the a-suffixed consonant pattern.
+v0.2.0, 2026-04-19 -- Correctness, safety, and packaging overhaul.
+    * Transliterator: bounds-safe lookahead (no IndexError on anusvara
+      / ja / pha at end-of-string), replace magic numbers with named
+      constants, drop bare except and Python 2 decode, make the class
+      stateless so instances can be shared across calls and threads.
+    * Nukta compositions decoupled from the Latn charmap array into a
+      dedicated NUKTA_COMPOSITIONS dict, fixing a slot collision where
+      input ೞ (U+0CDE) used to produce "fa" instead of the correct
+      Dravidian "ḻa".
+    * ISO 15919 charmap corrections: vocalic r/rr/l/ll now use
+      combining ring below (r̥, r̥̄, l̥, l̥̄) as ISO 15919 specifies
+      — this also removes the ḷ/ḹ collision with retroflex "ḷa".
+      Anusvara confirmed as ṁ (U+1E41, dot above) per ISO 15919;
+      dot-below ṃ is the IAST convention.
+    * New correct mappings for previously-unhandled Kannada codepoints:
+      ೝ (U+0CDD, nakaara pollu) -> "n"; ೞ (U+0CDE) -> "ḻa".
+    * pytest suite (39 tests) covering vowels, matras, virama, schwa
+      deletion, ai/au colon disambiguation, homorganic anusvara across
+      all five stop classes, nukta compositions, Dravidian letters,
+      and end-of-string robustness regressions.
+    * Modernized packaging: PEP 621 pyproject.toml, dropped legacy
+      setup.py / MANIFEST.in / README.txt duplication, python_requires
+      >= 3.7, full classifiers.
+    * Revamped README with standard structure, API reference, ISO
+      15919 vs IAST comparison table, and development guide.
 
 v0.1dev, 2018-08-18 -- Initial release.

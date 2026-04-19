@@ -1,1 +1,5 @@
+v0.2.0, 2026-04-19 -- Bounds-safe lookahead, remove Py2 decode, make
+    Transliterator stateless per call, replace magic numbers with named
+    constants, explicit nukta handling, pytest suite, pyproject.toml.
+
 v0.1dev, 2018-08-18 -- Initial release.

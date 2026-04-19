@@ -53,6 +53,24 @@ class TestMatras:
         assert t.knda_to_latn("ಭೀ") == "bhī"
 
 
+class TestVocalicRAndL:
+    def test_independent_vocalic_r_uses_ring_below(self, t):
+        # ISO 15919: r with ring below (U+0072 U+0325)
+        assert t.knda_to_latn("ಋ") == "r\u0325"
+
+    def test_independent_vocalic_l_uses_ring_below(self, t):
+        # ISO 15919: l with ring below (no collision with retroflex la)
+        assert t.knda_to_latn("ಌ") == "l\u0325"
+
+    def test_matra_vocalic_r_after_consonant(self, t):
+        # ಕೃ -> "kr̥"
+        assert t.knda_to_latn("ಕೃ") == "kr\u0325"
+
+    def test_krishna(self, t):
+        # ಕೃಷ್ಣ -> "kr̥ṣṇa"
+        assert t.knda_to_latn("ಕೃಷ್ಣ") == "kr\u0325ṣṇa"
+
+
 class TestAmbiguityColon:
     def test_colon_between_consonant_schwa_and_independent_i(self, t):
         # ಬಇ should be "ba:i", not "bai"
@@ -69,7 +87,7 @@ class TestAmbiguityColon:
 class TestAnusvara:
     def test_anusvara_default(self, t):
         # No following consonant -> default anusvara
-        assert t.knda_to_latn("ಓಂ") == "ōṁ"
+        assert t.knda_to_latn("ಓಂ") == "ōṃ"
 
     def test_anusvara_before_velar(self, t):
         # ಅಂಕ -> aṅka
@@ -118,7 +136,7 @@ class TestNonKannadaPassthrough:
 class TestRobustness:
     def test_trailing_anusvara_no_crash(self, t):
         # Regression: lookahead past end used to raise IndexError
-        assert t.knda_to_latn("ಕಂ") == "kaṁ"
+        assert t.knda_to_latn("ಕಂ") == "kaṃ"
 
     def test_trailing_ja_no_crash(self, t):
         # Regression: ja at end used to raise IndexError
@@ -139,7 +157,7 @@ class TestKnownWords:
         ("ಭೀಮ", "bhīma"),
         ("ಮಹಾಭಾರತ", "mahābhārata"),
         ("ಆದಿ ಕವಿ", "ādi kavi"),
-        ("ಗದಾಯುದ್ಧಂ", "gadāyuddhaṁ"),
+        ("ಗದಾಯುದ್ಧಂ", "gadāyuddhaṃ"),
     ])
     def test_words(self, t, knda, latn):
         assert t.knda_to_latn(knda) == latn

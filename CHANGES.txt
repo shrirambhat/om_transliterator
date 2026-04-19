@@ -1,5 +1,9 @@
 v0.2.0, 2026-04-19 -- Bounds-safe lookahead, remove Py2 decode, make
     Transliterator stateless per call, replace magic numbers with named
     constants, explicit nukta handling, pytest suite, pyproject.toml.
+    ISO 15919 charmap fixes: anusvara now ṃ (U+1E43, dot below) instead
+    of ṁ (dot above); vocalic r/rr/l/ll use combining ring below
+    (removing the ḷ collision with retroflex la ḷa); ġ slot now "ġa"
+    for consistency with the a-suffixed consonant pattern.
 
 v0.1dev, 2018-08-18 -- Initial release.

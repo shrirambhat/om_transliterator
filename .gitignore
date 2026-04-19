@@ -2,3 +2,6 @@ build
 dist
 pythonenv3.8
 *.egg-info
+__pycache__/
+*.pyc
+.pytest_cache/

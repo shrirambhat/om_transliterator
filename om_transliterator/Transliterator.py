@@ -12,116 +12,111 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Transliterator is a library for transliterating text from Kannada (Knda) unicode script to Latin (Latn) script as per ISO 15919."""
+"""Kannada (Knda) to Latin (Latn) transliteration per ISO 15919:2001."""
 
-from om_transliterator.charmap import charmap_iso15919
+from om_transliterator.charmap import charmap_iso15919, NUKTA_COMPOSITIONS
+
+KANNADA_BLOCK_START = 0x0C80
+KANNADA_BLOCK_SIZE = 128
+
+POS_ANUSVARA = 2
+POS_I = 7
+POS_U = 9
+POS_NUKTA = 60
+
+MATRA_RANGE = range(62, 78)
+
+VELARS = range(21, 26)
+PALATALS = range(26, 31)
+RETROFLEXES = range(31, 36)
+DENTALS = range(36, 41)
+LABIALS = range(42, 47)
+STOPS = frozenset(VELARS) | frozenset(PALATALS) | frozenset(RETROFLEXES) | frozenset(DENTALS) | frozenset(LABIALS)
+
+POS_VELAR_NASAL = 25
+POS_PALATAL_NASAL = 30
+POS_RETROFLEX_NASAL = 35
+POS_DENTAL_NASAL = 40
+POS_LABIAL_NASAL = 46
+
 
 class Transliterator:
 
-    def __init__(self):
-        self.transliterated_text = ""
-    # end def
-
     def knda_to_latn(self, original_text):
-        """Transliterate Kannada (Knda) unicode string to Latin (Latn) characters as per ISO 15919.
-        
-        The steps performed by this method are:
+        """Transliterate a Kannada unicode string to Latin per ISO 15919.
 
-        1. Iterate through each character in the string.
-        2. If the current character is diatrics (matras) for vowels, 
-            delete the inherent a.
-        3. If the current character is an independent vowel syllable 
-            (unattached to a preceding consonant), then add a colon 
-            to resolve ambiguities.
-        4. If the current character is a valid Kannada character, then
-            replace it with equivalent latin character.
+        Rules applied, in order:
 
-        In step 4, check rules for anusvaara and special characters like za and fa.
+        1. A vowel sign (matra) deletes the inherent 'a' of the preceding
+           consonant cluster.
+        2. An independent vowel i/u following a consonant+schwa is
+           separated by a colon to disambiguate "ba:i" from "bai".
+        3. Anusvara is rendered as the homorganic nasal of the following
+           stop when one exists, otherwise as the default "ṁ".
+        4. A base consonant followed by nukta (U+0CBC) composes to a
+           loan-sound form (ja+nukta -> za, pha+nukta -> fa, etc).
+        5. Any character outside the Kannada block passes through
+           unchanged.
 
         Args:
-            original_text (string): Original text in Kannada unicode.
-        
+            original_text (str): Source text in Kannada unicode.
+
         Returns:
-            string: Transliterated text.
+            str: Transliterated text.
         """
-        index = 0
-        self.transliterated_text = ""
-        for character in original_text:
-            index += 1
-            character_position = self._get_character_position(character)
+        latn_map = charmap_iso15919["Latn"]
+        out = []
+        skip_next = False
 
-            # if character_position is diatrics, then remove the last shwa
-            if character_position >= 62 and character_position <= 77:
-                self._delete_schwa()
-            # end if
+        for index, character in enumerate(original_text):
+            if skip_next:
+                skip_next = False
+                continue
 
-            # A colon (:) is used for resolving ambiguities in ai and au. Eg: ಬಇ is ba:i, not bai which can mean ಬೈ.
-            if character_position in [7,9] and self.transliterated_text[-1:] == "a":
-                self.transliterated_text += ":"
-            # end if
+            position = self._get_character_position(character)
+            next_position = self._get_character_position(original_text[index + 1]) \
+                if index + 1 < len(original_text) else -1
 
-            if character_position > 0 and character_position <= 128:
-                try:
-                    # if character_position is anusvaara,
-                    if character_position == 2:
-                        if self._get_character_position(original_text[index]) in [21,22,23,24,25]:
-                            # if anusvaara is before velars, then use velar nasal.
-                            self.transliterated_text += charmap_iso15919["Latn"][25]
-                            self._delete_schwa()
-                        elif self._get_character_position(original_text[index]) in [26,27,28,29,30]:
-                            # if anusvaara is before palatals, then use palatal nasal.
-                            self.transliterated_text += charmap_iso15919["Latn"][30]
-                            self._delete_schwa()
-                        elif self._get_character_position(original_text[index]) in [31,32,33,34,35]:
-                            # if anusvaara is before retroflexes, then use retroflex nasal.
-                            self.transliterated_text += charmap_iso15919["Latn"][35]
-                            self._delete_schwa()
-                        elif self._get_character_position(original_text[index]) in [36,37,38,39,40]:
-                            # if anusvaara is before dentals, then use dental nasal.
-                            self.transliterated_text += charmap_iso15919["Latn"][40]
-                            self._delete_schwa()
-                        elif self._get_character_position(original_text[index]) in [42,43,44,45,46]:
-                            # if anusvaara is before labials, then use labial nasal.
-                            self.transliterated_text += charmap_iso15919["Latn"][46]
-                            self._delete_schwa()
-                        else:
-                            # for all other cases, use default anusvaara.
-                            self.transliterated_text += charmap_iso15919["Latn"][character_position]
-                        # end if anusvaara
-                    elif character_position == 28 and self._get_character_position(original_text[index]) == 60:
-                        # if za, use specific character.
-                        self.transliterated_text += charmap_iso15919["Latn"][91]
-                    elif character_position == 43 and self._get_character_position(original_text[index]) == 60:
-                        # if fa, use specific character.
-                        self.transliterated_text += charmap_iso15919["Latn"][94]
-                    else:
-                        self.transliterated_text += charmap_iso15919["Latn"][character_position]
-                    # end if
-                except:
-                    self.transliterated_text += charmap_iso15919["Latn"][character_position]
-                # end try
+            if position in MATRA_RANGE:
+                self._delete_schwa(out)
 
+            if position in (POS_I, POS_U) and out and out[-1].endswith("a"):
+                out.append(":")
+
+            if 0 < position < KANNADA_BLOCK_SIZE:
+                if position == POS_ANUSVARA:
+                    out.append(self._anusvara_for(next_position, latn_map))
+                    if next_position in STOPS:
+                        self._delete_schwa(out)
+                elif next_position == POS_NUKTA and position in NUKTA_COMPOSITIONS:
+                    out.append(NUKTA_COMPOSITIONS[position])
+                    skip_next = True
+                else:
+                    out.append(latn_map[position])
             else:
-                # Not a Kannada character; leave it as it is.
-                self.transliterated_text += character
-            # end if
-        # end for
-        try:
-            result = self.transliterated_text.decode("utf-8")
-        except BaseException:
-            result = self.transliterated_text
-        return result
-    # end def
+                out.append(character)
 
-    def _get_character_position(self, character):
-        character_position = ord(character) - 0x0C80
-        return character_position
-    # end def
+        return "".join(out)
 
-    def _delete_schwa(self):
-        if self.transliterated_text[-1:] == "a":
-            self.transliterated_text = self.transliterated_text[:-1]
-        # end if
-    # end def
+    @staticmethod
+    def _anusvara_for(next_position, latn_map):
+        if next_position in VELARS:
+            return latn_map[POS_VELAR_NASAL]
+        if next_position in PALATALS:
+            return latn_map[POS_PALATAL_NASAL]
+        if next_position in RETROFLEXES:
+            return latn_map[POS_RETROFLEX_NASAL]
+        if next_position in DENTALS:
+            return latn_map[POS_DENTAL_NASAL]
+        if next_position in LABIALS:
+            return latn_map[POS_LABIAL_NASAL]
+        return latn_map[POS_ANUSVARA]
 
-# end class
+    @staticmethod
+    def _get_character_position(character):
+        return ord(character) - KANNADA_BLOCK_START
+
+    @staticmethod
+    def _delete_schwa(out):
+        if out and out[-1].endswith("a"):
+            out[-1] = out[-1][:-1]
